@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L7 Load Balancer Monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { 
+            color: #38bdf8; 
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h3 { 
+            margin-top: 0; 
+            border-bottom: 1px solid #334155; 
+            padding-bottom: 10px;
+            color: #94a3b8;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        .blocked-card {
+            grid-column: span 2;
+            border-color: #ef4444;
+            background: linear-gradient(45deg, #1e293b 0%, #2b1d1d 100%);
+        }
+        .blocked-count {
+            font-size: 4em;
+            color: #f87171;
+            text-align: center;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(248, 113, 113, 0.4);
+            margin: 10px 0;
+        }
+        .blocked-label {
+            text-align: center;
+            color: #f87171;
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .status-list { list-style: none; padding: 0; }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #0f172a;
+            border-radius: 8px;
+            border-left: 4px solid #334155;
+            transition: all 0.3s ease;
+        }
+        .status-item:hover { transform: translateX(5px); }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+            color: #0f172a;
+        }
+        .alive { 
+            background-color: #4ade80; 
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); 
+            border-left-color: #4ade80;
+        }
+        .dead { 
+            background-color: #f87171; 
+            box-shadow: 0 0 10px rgba(248, 113, 113, 0.5); 
+        }
+
+        canvas { max-height: 250px; }
+    </style>
+</head>
+<body>
+
+    <h1>L7 SYSTEM MONITOR</h1>
+
+    <div class="grid-container">
+        
+        <div class="card blocked-card">
+            <h3>Blocked Requests (Rate Limited)</h3>
+            <div id="blockedCount" class="blocked-count">0</div>
+            <div class="blocked-label">Total Requests Rejected by Token Bucket Algorithm</div>
+        </div>
+
+        <div class="card">
+            <h3>Backend Nodes Status</h3>
+            <ul class="status-list" id="serverList">
+                <li>Waiting for API stream...</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Real-Time Traffic Distribution</h3>
+            <canvas id="trafficChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [], 
+                datasets: [{
+                    label: 'Processed Requests',
+                    data: [],
+                    backgroundColor: ['#38bdf8', '#818cf8', '#34d399'],
+                    borderColor: '#1e293b',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: '#334155' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                animation: { duration: 0 }
+            }
+        });
+
+        async function fetchData() {
+            try {
+                const response = await fetch('http://localhost:9091/stats');
+                
+                if (!response.ok) throw new Error("API Unreachable");
+
+                const data = await response.json();
+                updateUI(data);
+            } catch (error) {
+                console.error("Connection Error:", error);
+            }
+        }
+
+        function updateUI(data) {
+            const blockedElem = document.getElementById('blockedCount');
+            blockedElem.innerText = data.total_blocked;
+
+            const listElement = document.getElementById('serverList');
+            const labels = [];
+            const values = [];
+
+            listElement.innerHTML = '';
+
+            data.backends.forEach(server => {
+                labels.push(server.url);
+                values.push(server.request_count);
+
+                const li = document.createElement('li');
+                li.className = 'status-item';
+                
+                const statusBadge = server.alive 
+                    ? '<span class="badge alive">ONLINE</span>' 
+                    : '<span class="badge dead">OFFLINE</span>';
+
+                if (!server.alive) li.style.opacity = "0.5";
+
+                li.innerHTML = `
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:bold; color:#e2e8f0;">${server.url}</span>
+                        <span style="font-size:0.8em; color:#94a3b8;">Node ID: ${server.url.split(':')[1]}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color: #38bdf8; font-weight:bold; font-size:1.2em;">${server.request_count}</div>
+                        ${statusBadge}
+                    </div>
+                `;
+                listElement.appendChild(li);
+            });
+
+            trafficChart.data.labels = labels;
+            trafficChart.data.datasets[0].data = values;
+            trafficChart.update();
+        }
+
+        setInterval(fetchData, 500);
+        fetchData(); 
+    </script>
+</body>
+</html>

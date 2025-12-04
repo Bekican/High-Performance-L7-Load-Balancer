@@ -1,0 +1,11 @@
+port: 8080
+api_port: 9091
+
+backends:
+  - "backend1:80"
+  - "backend2:80"
+
+rules:
+  "/admin": "backend1:80"
+  "/img":   "backend2:80"
+  "/payment": "backend1:80"

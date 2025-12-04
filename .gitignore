@@ -1,0 +1,105 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+loadbalancer
+loadbalancer.exe
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux specific
+.directory
+.Trash-*
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# Build artifacts
+dist/
+build/
+bin/
+*.tar.gz
+*.zip
+
+# Docker volumes and data
+.docker/
+docker-compose.override.yml
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration overrides (keep template, ignore local configs)
+config.local.yaml
+config.dev.yaml
+config.prod.yaml
+
+# Test results
+test-results/
+*.test.out
+
+# Profiling data
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+
+# Debug files
+debug
+__debug_bin
+
+# Air live reload (if used)
+tmp/
+.air.toml
+
+# Go sum backup
+go.sum.backup

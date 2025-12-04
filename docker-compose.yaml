@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+ 
+  lb:
+    build: .
+    container_name: go-loadbalancer
+    ports:
+      - "8080:8080" 
+      - "9091:9091"
+    depends_on:
+      - backend1
+      - backend2
+    networks:
+      - lb-network
+
+  backend1:
+    image: python:3.9-alpine
+    container_name: backend-1
+    command: python -m http.server 80
+    volumes:
+      - ./html/backend1:/var/www 
+    working_dir: /var/www
+    networks:
+      - lb-network
+
+
+  backend2:
+    image: python:3.9-alpine
+    container_name: backend-2
+    command: python -m http.server 80
+    volumes:
+      - ./html/backend2:/var/www
+    working_dir: /var/www
+    networks:
+      - lb-network
+
+
+networks:
+  lb-network:
+    driver: bridge
