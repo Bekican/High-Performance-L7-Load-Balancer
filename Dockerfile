@@ -1,5 +1,5 @@
 # Stage 1: Build Stage
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -12,6 +12,7 @@ COPY . .
 
 # Build the application
 # CGO_ENABLED=0 creates a statically linked binary
+# Note: go-sqlite (glebarez) is pure Go, so CGO_ENABLED=0 is fine.
 RUN CGO_ENABLED=0 GOOS=linux go build -o loadbalancer ./cmd/lb/main.go
 
 # Stage 2: Run Stage (Distroless / Scratch / Alpine)
@@ -26,10 +27,12 @@ RUN apk --no-cache add ca-certificates
 COPY --from=builder /app/loadbalancer .
 COPY --from=builder /app/config.yaml .
 COPY --from=builder /app/dashboard.html .
+# Only copy html if it exists, otherwise mkdir
+RUN mkdir -p html
 COPY --from=builder /app/html ./html
 
 # Expose ports
-EXPOSE 8080 9091
+EXPOSE 8080 9091 443
 
 # Run
 CMD ["./loadbalancer"]

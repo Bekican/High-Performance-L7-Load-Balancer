@@ -7,10 +7,12 @@ import (
 )
 
 type Config struct {
-	Port     int               `yaml:"port"`
-	ApiPort  int               `yaml:"api_port"`
-	Backends []string          `yaml:"backends"`
-	Rules    map[string]string `yaml:"rules"`
+	Port       int               `yaml:"port"`
+	ApiPort    int               `yaml:"api_port"`
+	WebhookUrl string            `yaml:"webhook_url"`
+	SSLDomain  string            `yaml:"ssl_domain"`
+	Backends   []string          `yaml:"backends"`
+	Rules      map[string]string `yaml:"rules"`
 }
 
 func LoadConfig(filename string) (*Config, error) {

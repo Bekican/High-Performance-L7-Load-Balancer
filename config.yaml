@@ -1,5 +1,7 @@
 port: 8080
 api_port: 9091
+webhook_url: "" # Slack/Discord Webhook URL
+ssl_domain: ""  # Set domain to enable Auto SSL (e.g., "example.com")
 
 backends:
   - "backend1:80"
