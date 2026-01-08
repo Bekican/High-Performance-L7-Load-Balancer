@@ -8,11 +8,17 @@ services:
     ports:
       - "8080:8080" 
       - "9091:9091"
+      - "443:443"
     depends_on:
       - backend1
       - backend2
+      - redis
+    environment:
+      - REDIS_ADDR=redis:6379
     networks:
       - lb-network
+    volumes:
+      - lb-data:/data
 
   backend1:
     image: python:3.9-alpine
@@ -24,7 +30,6 @@ services:
     networks:
       - lb-network
 
-
   backend2:
     image: python:3.9-alpine
     container_name: backend-2
@@ -35,7 +40,17 @@ services:
     networks:
       - lb-network
 
+  redis:
+    image: redis:alpine
+    container_name: lb-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - lb-network
 
 networks:
   lb-network:
     driver: bridge
+
+volumes:
+  lb-data:
