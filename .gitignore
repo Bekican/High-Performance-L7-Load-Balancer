@@ -103,3 +103,40 @@ tmp/
 
 # Go sum backup
 go.sum.backup
+
+# ================================
+# React/Node.js Frontend
+# ================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+frontend/dist/
+frontend/build/
+.next/
+out/
+
+# Vite cache
+.vite/
+*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Package manager locks (optional - uncomment if using specific manager)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ESLint cache
+.eslintcache
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Compiled binary
+lb.exe
