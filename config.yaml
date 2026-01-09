@@ -2,10 +2,9 @@ port: 8080
 api_port: 9091
 
 backends:
-  - "backend1:80"
-  - "backend2:80"
+  - "localhost:8001"
+  - "localhost:8002"
 
 rules:
-  "/admin": "backend1:80"
-  "/img":   "backend2:80"
-  "/payment": "backend1:80"
+  "/admin": "localhost:8001"
+  "/api":   "localhost:8002"
